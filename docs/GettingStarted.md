@@ -3,7 +3,7 @@ id: getting-started
 title: Getting Started
 ---
 
-Install Jest using `npm`:
+Install Jest using [`npm`](https://www.npmjs.com/):
 
 ```
 npm install --save-dev jest
@@ -81,8 +81,15 @@ To use [Babel](http://babeljs.io/), install the `babel-jest` and
 `regenerator-runtime` packages:
 
 ```
-npm install --save-dev babel-jest regenerator-runtime
+npm install --save-dev babel-jest babel-core regenerator-runtime
 ```
+
+> Note: If you are using a babel version 7 then you need to install `babel-jest`
+> with the following command:
+>
+> ```
+> npm install --save-dev babel-jest 'babel-core@^7.0.0-0' @babel/core regenerator-runtime
+> ```
 
 _Note: Explicitly installing `regenerator-runtime` is not needed if you use
 `npm` 3 or 4 or Yarn_
@@ -106,8 +113,8 @@ You are now set up to use all ES6 features and React specific syntax.
 > `test`. It will not use `development` section like Babel does by default when
 > no `NODE_ENV` is set.
 
-> Note: If you've turned off transpilation of ES2015 modules with the option `{
-> "modules": false }`, you have to make sure to turn this on in your test
+> Note: If you've turned off transpilation of ES2015 modules with the option
+> `{ "modules": false }`, you have to make sure to turn this on in your test
 > environment.
 
 ```json

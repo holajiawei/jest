@@ -104,13 +104,13 @@ for the `toBe` matcher:
 const diff = require('jest-diff');
 expect.extend({
   toBe(received, expected) {
-    const pass = received === expected;
+    const pass = Object.is(received, expected);
 
     const message = pass
       ? () =>
           this.utils.matcherHint('.not.toBe') +
           '\n\n' +
-          `Expected value to not be (using ===):\n` +
+          `Expected value to not be (using Object.is):\n` +
           `  ${this.utils.printExpected(expected)}\n` +
           `Received:\n` +
           `  ${this.utils.printReceived(received)}`
@@ -121,7 +121,7 @@ expect.extend({
           return (
             this.utils.matcherHint('.toBe') +
             '\n\n' +
-            `Expected value to be (using ===):\n` +
+            `Expected value to be (using Object.is):\n` +
             `  ${this.utils.printExpected(expected)}\n` +
             `Received:\n` +
             `  ${this.utils.printReceived(received)}` +
@@ -139,7 +139,7 @@ This will print something like this:
 ```
   expect(received).toBe(expected)
 
-    Expected value to be (using ===):
+    Expected value to be (using Object.is):
       "banana"
     Received:
       "apple"
@@ -159,7 +159,7 @@ you want to check that a mock function is called with a non-null argument:
 ```js
 test('map calls its argument with a non-null argument', () => {
   const mock = jest.fn();
-  [1].map(mock);
+  [1].map(x => mock(x));
   expect(mock).toBeCalledWith(expect.anything());
 });
 ```
@@ -395,6 +395,10 @@ test('resolves to lemon', () => {
 });
 ```
 
+Note that, since you are still testing promises, the test is still asynchronous.
+Hence, you will need to [tell Jest to wait](TestingAsyncCode.md#promises) by
+returning the unwrapped assertion.
+
 Alternatively, you can use `async/await` in combination with `.resolves`:
 
 ```js
@@ -416,9 +420,15 @@ For example, this code tests that the promise rejects with reason `'octopus'`:
 ```js
 test('rejects to octopus', () => {
   // make sure to add a return statement
-  return expect(Promise.reject(new Error('octopus'))).rejects.toThrow('octopus');
+  return expect(Promise.reject(new Error('octopus'))).rejects.toThrow(
+    'octopus',
+  );
 });
 ```
+
+Note that, since you are still testing promises, the test is still asynchronous.
+Hence, you will need to [tell Jest to wait](TestingAsyncCode.md#promises) by
+returning the unwrapped assertion.
 
 Alternatively, you can use `async/await` in combination with `.rejects`.
 
@@ -430,8 +440,8 @@ test('rejects to octopus', async () => {
 
 ### `.toBe(value)`
 
-`toBe` just checks that a value is what you expect. It uses `===` to check
-strict equality.
+`toBe` just checks that a value is what you expect. It uses `Object.is` to check
+exact equality.
 
 For example, this code will validate some properties of the `can` object:
 
@@ -875,7 +885,8 @@ describe('toMatchObject applied to arrays arrays', () => {
     expect([{foo: 'bar'}, {baz: 1}]).toMatchObject([{foo: 'bar'}, {baz: 1}]);
   });
 
-  // .arrayContaining "matches a received array which contains elements that are *not* in the expected array"
+  // .arrayContaining "matches a received array which contains elements that
+  // are *not* in the expected array"
   test('.toMatchObject does not allow extra elements', () => {
     expect([{foo: 'bar'}, {baz: 1}]).toMatchObject([{foo: 'bar'}]);
   });

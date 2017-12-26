@@ -25,7 +25,7 @@ describe('async jasmine', () => {
 
     const {message} = json.testResults[0];
     expect(message).toMatch('with failing timeout');
-    expect(message).toMatch('Async callback was not invoked within timeout');
+    expect(message).toMatch('Async callback was not invoked within');
     expect(message).toMatch('done - with error thrown');
     expect(message).toMatch('done - with error called back');
   });
@@ -140,5 +140,11 @@ describe('async jasmine', () => {
     expect(result.json.testResults[0].message).toEqual(
       expect.stringContaining('Expected value to be truthy, instead received'),
     );
+  });
+
+  it('generator test', () => {
+    const result = runJest('jasmine_async', ['generator.test.js']);
+
+    expect(result.status).toBe(0);
   });
 });

@@ -16,8 +16,8 @@ import chalk from 'chalk';
 import getChangedFilesPromise from './get_changed_files_promise';
 import {replacePathSepForRegex} from 'jest-regex-util';
 import HasteMap from 'jest-haste-map';
-import isCI from 'is-ci';
 import isValidPath from './lib/is_valid_path';
+import {isInteractive} from 'jest-util';
 import {print as preRunMessagePrint} from './pre_run_message';
 import createContext from './lib/create_context';
 import runJest from './run_jest';
@@ -27,10 +27,10 @@ import TestWatcher from './test_watcher';
 import Prompt from './lib/Prompt';
 import TestPathPatternPrompt from './test_path_pattern_prompt';
 import TestNamePatternPrompt from './test_name_pattern_prompt';
+import FailedTestsCache from './failed_tests_cache';
 import WatchPluginRegistry from './lib/watch_plugin_registry';
 import {KEYS, CLEAR} from './constants';
 
-const isInteractive = process.stdout.isTTY && !isCI;
 let hasExitListener = false;
 
 export default function watch(
@@ -56,6 +56,7 @@ export default function watch(
     }
   }
 
+  const failedTestsCache = new FailedTestsCache();
   const prompt = new Prompt();
   const testPathPatternPrompt = new TestPathPatternPrompt(outputStream, prompt);
   const testNamePatternPrompt = new TestNamePatternPrompt(outputStream, prompt);
@@ -121,6 +122,7 @@ export default function watch(
     return runJest({
       changedFilesPromise,
       contexts,
+      failedTestsCache,
       globalConfig,
       onComplete: results => {
         isRunning = false;
@@ -129,18 +131,25 @@ export default function watch(
         // The old instance that was passed to Jest will still be interrupted
         // and prevent test runs from the previous run.
         testWatcher = new TestWatcher({isWatchMode: true});
-        if (shouldDisplayWatchUsage) {
-          outputStream.write(
-            usage(globalConfig, watchPlugins, hasSnapshotFailure),
-          );
-          shouldDisplayWatchUsage = false; // hide Watch Usage after first run
-          isWatchUsageDisplayed = true;
-        } else {
-          outputStream.write(showToggleUsagePrompt());
-          shouldDisplayWatchUsage = false;
-          isWatchUsageDisplayed = false;
-        }
 
+        // Do not show any Watch Usage related stuff when running in a
+        // non-interactive environment
+        if (isInteractive) {
+          if (shouldDisplayWatchUsage) {
+            outputStream.write(
+              usage(globalConfig, watchPlugins, hasSnapshotFailure),
+            );
+            shouldDisplayWatchUsage = false; // hide Watch Usage after first run
+            isWatchUsageDisplayed = true;
+          } else {
+            outputStream.write(showToggleUsagePrompt());
+            shouldDisplayWatchUsage = false;
+            isWatchUsageDisplayed = false;
+          }
+        } else {
+          outputStream.write('\n');
+        }
+        failedTestsCache.setTestResults(results.testResults);
         testNamePatternPrompt.updateCachedTestResults(results.testResults);
       },
       outputStream,
@@ -152,6 +161,7 @@ export default function watch(
   let activePlugin: ?WatchPlugin;
   const onKeypress = (key: string) => {
     if (key === KEYS.CONTROL_C || key === KEYS.CONTROL_D) {
+      outputStream.write('\n');
       process.exit(0);
       return;
     }
@@ -171,7 +181,9 @@ export default function watch(
     if (
       isRunning &&
       testWatcher &&
-      [KEYS.Q, KEYS.ENTER, KEYS.A, KEYS.O, KEYS.P, KEYS.T].indexOf(key) !== -1
+      [KEYS.Q, KEYS.ENTER, KEYS.A, KEYS.O, KEYS.P, KEYS.T, KEYS.F].indexOf(
+        key,
+      ) !== -1
     ) {
       testWatcher.setState({interrupted: true});
       return;
@@ -193,6 +205,7 @@ export default function watch(
 
     switch (key) {
       case KEYS.Q:
+        outputStream.write('\n');
         process.exit(0);
         return;
       case KEYS.ENTER:
@@ -221,6 +234,12 @@ export default function watch(
           mode: 'watch',
           testNamePattern: '',
           testPathPattern: '',
+        });
+        startRun(globalConfig);
+        break;
+      case KEYS.F:
+        globalConfig = updateGlobalConfig(globalConfig, {
+          onlyFailures: !globalConfig.onlyFailures,
         });
         startRun(globalConfig);
         break;
@@ -335,6 +354,12 @@ const usage = (
     globalConfig.watch
       ? chalk.dim(' \u203A Press ') + 'a' + chalk.dim(' to run all tests.')
       : null,
+
+    globalConfig.onlyFailures
+      ? chalk.dim(' \u203A Press ') + 'f' + chalk.dim(' to run all tests.')
+      : chalk.dim(' \u203A Press ') +
+        'f' +
+        chalk.dim(' to run only failed tests.'),
 
     (globalConfig.watchAll ||
       globalConfig.testPathPattern ||

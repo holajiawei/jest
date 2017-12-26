@@ -5,14 +5,16 @@ You will need Node 6 or newer in order to build the Jest website.
 The first time, get all the dependencies loaded via
 
 ```
-npm install
+yarn
 ```
+
+in the root directory.
 
 Then, run the server via
 
 ```
 npm start
-Open http://localhost:8080/jest/index.html
+Open http://localhost:3000
 ```
 
 Anytime you change the contents, just refresh the page and it's going to be

@@ -202,6 +202,14 @@ export const options = {
     description: 'Print debugging info about your jest config.',
     type: 'boolean',
   },
+  detectLeaks: {
+    default: false,
+    description:
+      '**EXPERIMENTAL**: Detect memory leaks in tests. After executing a ' +
+      'test, it will try to garbage collect the global object used, and fail ' +
+      'if it was leaked',
+    type: 'boolean',
+  },
   env: {
     description:
       'The test environment used for all tests. This can point to ' +
@@ -230,6 +238,14 @@ export const options = {
       'This is useful when resources set up by test code cannot be ' +
       'adequately cleaned up.',
     type: 'boolean',
+  },
+  globalSetup: {
+    description: 'The path to a module that runs before All Tests.',
+    type: 'string',
+  },
+  globalTeardown: {
+    description: 'The path to a module that runs after All Tests.',
+    type: 'string',
   },
   globals: {
     description:
@@ -339,6 +355,12 @@ export const options = {
       'Attempts to identify which tests to run based on which ' +
       "files have changed in the current repository. Only works if you're " +
       'running tests in a git repository at the moment.',
+    type: 'boolean',
+  },
+  onlyFailures: {
+    alias: 'f',
+    default: undefined,
+    description: 'Run tests that failed in the previous execution.',
     type: 'boolean',
   },
   outputFile: {
@@ -476,7 +498,7 @@ export const options = {
     description:
       'A regexp pattern string that is matched against all tests ' +
       'paths before executing the test.',
-    type: 'string',
+    type: 'array',
   },
   testRegex: {
     description: 'The regexp pattern Jest uses to detect test files.',

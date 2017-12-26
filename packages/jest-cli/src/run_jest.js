@@ -22,6 +22,7 @@ import SearchSource from './search_source';
 import TestScheduler from './test_scheduler';
 import TestSequencer from './test_sequencer';
 import {makeEmptyAggregatedTestResult} from './test_result_helpers';
+import FailedTestsCache from './failed_tests_cache';
 
 const setConfig = (contexts, newConfig) =>
   contexts.forEach(
@@ -38,20 +39,16 @@ const getTestPaths = async (
   changedFilesPromise,
 ) => {
   const source = new SearchSource(context);
-  let data = await source.getTestPaths(globalConfig, changedFilesPromise);
+  const data = await source.getTestPaths(globalConfig, changedFilesPromise);
 
   if (!data.tests.length && globalConfig.onlyChanged && data.noSCM) {
-    if (globalConfig.watch) {
-      data = await source.getTestPaths(globalConfig);
-    } else {
-      new Console(outputStream, outputStream).log(
-        'Jest can only find uncommitted changed files in a git or hg ' +
-          'repository. If you make your project a git or hg ' +
-          'repository (`git init` or `hg init`), Jest will be able ' +
-          'to only run tests related to files changed since the last ' +
-          'commit.',
-      );
-    }
+    new Console(outputStream, outputStream).log(
+      'Jest can only find uncommitted changed files in a git or hg ' +
+        'repository. If you make your project a git or hg ' +
+        'repository (`git init` or `hg init`), Jest will be able ' +
+        'to only run tests related to files changed since the last ' +
+        'commit.',
+    );
   }
   return data;
 };
@@ -86,6 +83,7 @@ export default (async function runJest({
   startRun,
   changedFilesPromise,
   onComplete,
+  failedTestsCache,
 }: {
   globalConfig: GlobalConfig,
   contexts: Array<Context>,
@@ -94,7 +92,12 @@ export default (async function runJest({
   startRun: (globalConfig: GlobalConfig) => *,
   changedFilesPromise: ?ChangedFilesPromise,
   onComplete: (testResults: AggregatedResult) => any,
+  failedTestsCache: ?FailedTestsCache,
 }) {
+  if (globalConfig.globalSetup) {
+    // $FlowFixMe
+    await require(globalConfig.globalSetup)();
+  }
   const sequencer = new TestSequencer();
   let allTests = [];
 
@@ -138,6 +141,12 @@ export default (async function runJest({
     onComplete && onComplete(makeEmptyAggregatedTestResult());
     return null;
   }
+
+  if (globalConfig.onlyFailures && failedTestsCache) {
+    allTests = failedTestsCache.filterTests(allTests);
+    globalConfig = failedTestsCache.updateConfig(globalConfig);
+  }
+
   if (!allTests.length) {
     const noTestsFoundMessage = getNoTestsFoundMessage(
       testRunData,
@@ -176,6 +185,10 @@ export default (async function runJest({
 
   sequencer.cacheResults(allTests, results);
 
+  if (globalConfig.globalTeardown) {
+    // $FlowFixMe
+    await require(globalConfig.globalTeardown)();
+  }
   return processResults(results, {
     isJSON: globalConfig.json,
     onComplete,

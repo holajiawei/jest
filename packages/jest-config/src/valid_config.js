@@ -37,7 +37,10 @@ export default ({
   },
   displayName: 'project-name',
   expand: false,
+  forceCoverageMatch: ['**/*.t.js'],
   forceExit: false,
+  globalSetup: 'setup.js',
+  globalTeardown: 'teardown.js',
   globals: {},
   haste: {
     providesModuleNodeModules: ['react', 'react-native'],
@@ -77,6 +80,7 @@ export default ({
   skipNodeResolution: false,
   snapshotSerializers: ['my-serializer-module'],
   testEnvironment: 'jest-environment-jsdom',
+  testEnvironmentOptions: {},
   testFailureExitCode: 1,
   testLocationInResults: false,
   testMatch: ['**/__tests__/**/*.js?(x)', '**/?(*.)(spec|test).js?(x)'],

@@ -279,25 +279,22 @@ const normalizeReporters = (options: InitialOptions, basedir) => {
 };
 
 const buildTestPathPattern = (argv: Argv): string => {
+  const patterns = [];
+
+  if (argv._) {
+    patterns.push(...argv._);
+  }
   if (argv.testPathPattern) {
-    if (validatePattern(argv.testPathPattern)) {
-      return argv.testPathPattern;
-    } else {
-      showTestPathPatternError(argv.testPathPattern);
-    }
+    patterns.push(...argv.testPathPattern);
   }
 
-  if (argv._ && argv._.length) {
-    const testPathPattern = argv._.join('|');
-
-    if (validatePattern(testPathPattern)) {
-      return testPathPattern;
-    } else {
-      showTestPathPatternError(testPathPattern);
-    }
+  const testPathPattern = patterns.map(replacePathSepForRegex).join('|');
+  if (validatePattern(testPathPattern)) {
+    return testPathPattern;
+  } else {
+    showTestPathPatternError(testPathPattern);
+    return '';
   }
-
-  return '';
 };
 
 const showTestPathPatternError = (testPathPattern: string) => {
@@ -387,6 +384,8 @@ export default function normalize(options: InitialOptions, argv: Argv) {
             _replaceRootDirInPath(options.rootDir, options[key]),
           );
         break;
+      case 'globalSetup':
+      case 'globalTeardown':
       case 'moduleLoader':
       case 'resolver':
       case 'runner':
@@ -455,10 +454,12 @@ export default function normalize(options: InitialOptions, argv: Argv) {
       case 'collectCoverage':
       case 'coverageReporters':
       case 'coverageThreshold':
+      case 'detectLeaks':
       case 'displayName':
       case 'expand':
       case 'globals':
       case 'findRelatedTests':
+      case 'forceCoverageMatch':
       case 'forceExit':
       case 'listTests':
       case 'logHeapUsage':
@@ -479,6 +480,7 @@ export default function normalize(options: InitialOptions, argv: Argv) {
       case 'silent':
       case 'skipNodeResolution':
       case 'testEnvironment':
+      case 'testEnvironmentOptions':
       case 'testFailureExitCode':
       case 'testLocationInResults':
       case 'testNamePattern':
@@ -492,6 +494,11 @@ export default function normalize(options: InitialOptions, argv: Argv) {
       case 'watchman':
         value = options[key];
         break;
+      case 'watchPlugins':
+        value = (options[key] || []).map(watchPlugin =>
+          resolve(options.rootDir, key, watchPlugin),
+        );
+        break;
     }
     newOptions[key] = value;
     return newOptions;
@@ -504,8 +511,12 @@ export default function normalize(options: InitialOptions, argv: Argv) {
 
   newOptions.testFailureExitCode = parseInt(newOptions.testFailureExitCode, 10);
 
-  if (argv.all || newOptions.testPathPattern) {
+  if (argv.all) {
     newOptions.onlyChanged = false;
+  } else if (newOptions.testPathPattern) {
+    // When passing a test path pattern we don't want to only monitor changed
+    // files unless `--watch` is also passed.
+    newOptions.onlyChanged = newOptions.watch;
   }
 
   newOptions.updateSnapshot =

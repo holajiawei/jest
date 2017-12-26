@@ -2,6 +2,76 @@
 
 ### Fixes
 
+* `[jest-config]` fix unexpected condition to avoid infinite recursion in
+  Windows platform. ([#5161](https://github.com/facebook/jest/pull/5161))
+
+### Features
+
+* `[jest-jasmine]` Allowed classes and functions as `describe` names.
+  ([#5154](https://github.com/facebook/jest/pull/5154))
+* `[jest-jasmine2]` Support generator functions as specs.
+  ([#5166](https://github.com/facebook/jest/pull/5166))
+
+### Chore & Maintenance
+
+## jest 22.0.4
+
+### Fixes
+
+* `[jest-cli]` New line before quitting watch mode.
+  ([#5158](https://github.com/facebook/jest/pull/5158))
+
+### Features
+
+* `[babel-jest]` moduleFileExtensions not passed to babel transformer.
+  ([#5110](https://github.com/facebook/jest/pull/5110))
+
+### Chore & Maintenance
+
+* `[*]` Tweaks to better support Node 4
+  ([#5142](https://github.com/facebook/jest/pull/5142))
+
+## jest 22.0.2 && 22.0.3
+
+### Chore & Maintenance
+
+* `[*]` Tweaks to better support Node 4
+  ([#5134](https://github.com/facebook/jest/pull/5134))
+
+## jest 22.0.1
+
+### Fixes
+
+* `[jest-runtime]` fix error for test files providing coverage.
+  ([#5117](https://github.com/facebook/jest/pull/5117))
+
+### Features
+
+* `[jest-config]` Add `forceCoverageMatch` to allow collecting coverage from
+  ignored files. ([#5081](https://github.com/facebook/jest/pull/5081))
+
+## jest 22.0.0
+
+### Fixes
+
+* `[jest-resolve]` Use `module.builtinModules` as `BUILTIN_MODULES` when it
+  exists
+* `[jest-worker]` Remove `debug` and `inspect` flags from the arguments sent to
+  the child ([#5068](https://github.com/facebook/jest/pull/5068))
+* `[jest-config]` Use all `--testPathPattern` and `<regexForTestFiles>` args in
+  `testPathPattern` ([#5066](https://github.com/facebook/jest/pull/5066))
+* `[jest-cli]` Do not support `--watch` inside non-version-controlled
+  environments ([#5060](https://github.com/facebook/jest/pull/5060))
+* `[jest-config]` Escape Windows path separator in testPathPattern CLI arguments
+  ([#5054](https://github.com/facebook/jest/pull/5054)
+* `[jest-jasmine]` Register sourcemaps as node environment to improve
+  performance with jsdom ([#5045](https://github.com/facebook/jest/pull/5045))
+* `[pretty-format]` Do not call toJSON recursively
+  ([#5044](https://github.com/facebook/jest/pull/5044))
+* `[pretty-format]` Fix errors when identity-obj-proxy mocks CSS Modules
+  ([#4935](https://github.com/facebook/jest/pull/4935))
+* `[babel-jest]` Fix support for namespaced babel version 7
+  ([#4918](https://github.com/facebook/jest/pull/4918))
 * `[expect]` fix .toThrow for promises
   ([#4884](https://github.com/facebook/jest/pull/4884))
 * `[jest-docblock]` pragmas should preserve urls
@@ -12,6 +82,8 @@
   ([#4494](https://github.com/facebook/jest/pull/4494))
 * `[jest-cli]` Throw if `maxWorkers` doesn't have a value
   ([#4591](https://github.com/facebook/jest/pull/4591))
+* `[jest-cli]` Use `fs.realpathSync.native` if available
+  ([#5031](https://github.com/facebook/jest/pull/5031))
 * `[jest-config]` Fix `--passWithNoTests`
   ([#4639](https://github.com/facebook/jest/pull/4639))
 * `[jest-config]` Support `rootDir` tag in testEnvironment
@@ -24,8 +96,6 @@
   ([#4599](https://github.com/facebook/jest/pull/4599))
 * `[jest-runtime]` Fix manual user mocks not working with custom resolver
   ([#4489](https://github.com/facebook/jest/pull/4489))
-* `[jest-runtime]` Move `babel-core` to peer dependencies so it works with Babel
-  7 ([#4557](https://github.com/facebook/jest/pull/4557))
 * `[jest-util]` Fix `runOnlyPendingTimers` for `setTimeout` inside
   `setImmediate` ([#4608](https://github.com/facebook/jest/pull/4608))
 * `[jest-message-util]` Always remove node internals from stacktraces
@@ -44,9 +114,27 @@
   thrown by pretty-format ([#4787](https://github.com/facebook/jest/pull/4787))
 * `[jest-environment-jsdom]` Fix asynchronous test will fail due to timeout
   issue. ([#4669](https://github.com/facebook/jest/pull/4669))
+* `[jest-cli]` Fix `--onlyChanged` path case sensitivity on Windows platform
+  ([#4730](https://github.com/facebook/jest/pull/4730))
+* `[jest-runtime]` Use realpath to match transformers
+  ([#5000](https://github.com/facebook/jest/pull/5000))
+* `[expect]` [**BREAKING**] Replace identity equality with Object.is in toBe
+  matcher ([#4917](https://github.com/facebook/jest/pull/4917))
 
 ### Features
 
+* `[jest-message-util]` Add codeframe to test assertion failures
+  ([#5087](https://github.com/facebook/jest/pull/5087))
+* `[jest-config]` Add Global Setup/Teardown options
+  ([#4716](https://github.com/facebook/jest/pull/4716))
+* `[jest-config]` Add `testEnvironmentOptions` to apply to jsdom options or node
+  context. ([#5003](https://github.com/facebook/jest/pull/5003))
+* `[jest-jasmine2]` Update Timeout error message to `jest.timeout` and display
+  current timeout value ([#4990](https://github.com/facebook/jest/pull/4990))
+* `[jest-runner]` Enable experimental detection of leaked contexts
+  ([#4895](https://github.com/facebook/jest/pull/4895))
+* `[jest-cli]` Add combined coverage threshold for directories.
+  ([#4885](https://github.com/facebook/jest/pull/4885))
 * `[jest-mock]` Add `timestamps` to mock state.
   ([#4866](https://github.com/facebook/jest/pull/4866))
 * `[eslint-plugin-jest]` Add `prefer-to-have-length` lint rule.
@@ -62,7 +150,7 @@
   ([#4593](https://github.com/facebook/jest/pull/4593))
 * `[jest-snapshot]` [**BREAKING**] Concatenate name of test and snapshot
   ([#4460](https://github.com/facebook/jest/pull/4460))
-* `[jest-cli]` Add an option to fail if no tests are found
+* `[jest-cli]` [**BREAKING**] Fail if no tests are found
   ([#3672](https://github.com/facebook/jest/pull/3672))
 * `[jest-diff]` Highlight only last of odd length leading spaces
   ([#4558](https://github.com/facebook/jest/pull/4558))
@@ -102,11 +190,26 @@
   ([#4497](https://github.com/facebook/jest/pull/4497))
 * `[jest-jasmine2]` Add `testLocationInResults` flag to add location information
   per spec to test results ([#4782](https://github.com/facebook/jest/pull/4782))
+* `[jest-environment-jsdom]` Update JSOM to 11.4, which includes built-in
+  support for `requestAnimationFrame`
+  ([#4919](https://github.com/facebook/jest/pull/4919))
+* `[jest-cli]` Hide watch usage output when running on non-interactive
+  environments ([#4958](https://github.com/facebook/jest/pull/4958))
+* `[jest-snapshot]` Promises support for `toThrowErrorMatchingSnapshot`
+  ([#4946](https://github.com/facebook/jest/pull/4946))
+* `[jest-cli]` Explain which snapshots are obsolete
+  ([#5005](https://github.com/facebook/jest/pull/5005))
 
 ### Chore & Maintenance
 
+* `[docs]` Add guide of using with puppeteer
+  ([#5093](https://github.com/facebook/jest/pull/5093))
+* `[jest-util]` `jest-util` should not depend on `jest-mock`
+  ([#4992](https://github.com/facebook/jest/pull/4992))
 * `[*]` [**BREAKING**] Drop support for Node.js version 4
   ([#4769](https://github.com/facebook/jest/pull/4769))
+* `[docs]` Wrap code comments at 80 characters
+  ([#4781](https://github.com/facebook/jest/pull/4781))
 * `[eslint-plugin-jest]` Removed from the Jest core repo, and moved to
   https://github.com/jest-community/eslint-plugin-jest
   ([#4867](https://github.com/facebook/jest/pull/4867))
@@ -130,6 +233,10 @@
   ([#4578](https://github.com/facebook/jest/pull/4578))
 * `[jest-runtime]` Add `.advanceTimersByTime`; keep `.runTimersToTime()` as an
   alias.
+* `[docs]` Include missing dependency in TestEnvironment sample code
+* `[docs]` Add clarification for hook execution order
+* `[docs]` Update `expect.anything()` sample code
+  ([#5007](https://github.com/facebook/jest/pull/5007))
 
 ## jest 21.2.1
 
@@ -1021,8 +1128,8 @@ See https://facebook.github.io/jest/blog/2016/12/15/2016-in-jest.html
   many tests.
   * Add support for property testing via testcheck-js.
 * Added a webpack tutorial.
-* Added support for virtual mocks through `jest.mock('Module', implementation,
-  {virtual: true})`.
+* Added support for virtual mocks through
+  `jest.mock('Module', implementation, {virtual: true})`.
 * Added snapshot functionality through `toMatchSnapshot()`.
 * Redesigned website.
 

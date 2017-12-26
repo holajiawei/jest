@@ -146,8 +146,8 @@ coverage information will be skipped.
 These pattern strings match against the full path. Use the `<rootDir>` string
 token to include the path to your project's root directory to prevent it from
 accidentally ignoring all of your files in different environments that may have
-different root directories. Example: `["<rootDir>/build/",
-"<rootDir>/node_modules/"]`.
+different root directories. Example:
+`["<rootDir>/build/", "<rootDir>/node_modules/"]`.
 
 ### `coverageReporters` [array<string>]
 
@@ -165,20 +165,39 @@ _Note: Setting this option overwrites the default values. Add `"text"` or
 Default: `undefined`
 
 This will be used to configure minimum threshold enforcement for coverage
-results. If the thresholds are not met, jest will return failure. Thresholds,
-when specified as a positive number are taken to be the minimum percentage
-required. When a threshold is specified as a negative number it represents the
-maximum number of uncovered entities allowed. Thresholds can be specified as
-`global`, as `glob` paths or just paths. If globs or paths are specified
-alongside `global`, coverage data for matching paths will be subtracted from
-overall coverage and thresholds will be applied independently. Threshold for
-globs is applied to all files matching the glob. If the file specified by path
-is not found, error is returned.
+results. Thresholds can be specified as `global`, as a
+[glob](https://github.com/isaacs/node-glob#glob-primer), and as a directory or
+file path. If thresholds aren't met, jest will fail. Thresholds specified as a
+positive number are taken to be the minimum percentage required. Thresholds
+specified as a negative number represent the maximum number of uncovered
+entities allowed.
 
-For example, statements: 90 implies minimum statement coverage is 90%.
-statements: -10 implies that no more than 10 uncovered statements are allowed.
-`global` branch threshold 50 will be applied to all files minus matching
-`./src/components/**/*.js` and `./src/api/very-important-module.js`.
+For example, with the following configuration jest will fail if there is less
+than 80% branch, line, and function coverage, or if there are more than 10
+uncovered statements:
+
+```json
+{
+  ...
+  "jest": {
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 80,
+        "lines": 80,
+        "statements": -10
+      }
+    }
+  }
+}
+```
+
+If globs or paths are specified alongside `global`, coverage data for matching
+paths will be subtracted from overall coverage and thresholds will be applied
+independently. Thresholds for globs are applied to all files matching the glob.
+If the file specified by path is not found, error is returned.
+
+For example, with the following configuration:
 
 ```json
 {
@@ -191,9 +210,12 @@ statements: -10 implies that no more than 10 uncovered statements are allowed.
         "lines": 50,
         "statements": 50
       },
-      "./src/components/**/*.js": {
+      "./src/components/": {
         "branches": 40,
         "statements": 40
+      },
+      "./src/reducers/**/*.js": {
+        "statements": 90,
       },
       "./src/api/very-important-module.js": {
         "branches": 100,
@@ -202,6 +224,51 @@ statements: -10 implies that no more than 10 uncovered statements are allowed.
         "statements": 100
       }
     }
+  }
+}
+```
+
+Jest will fail if:
+
+* The `./src/components` directory has less than 40% branch or statement
+  coverage.
+* One of the files matching the `./src/reducers/**/*.js` glob has less than 90%
+  statement coverage.
+* The `./src/api/very-important-module.js` file has less than 100% coverage.
+* Every remaining file combined has less than 50% coverage (`global`).
+
+### `forceCoverageMatch` [array<string>]
+
+Default: `['']`
+
+Test files are normally ignored from collecting code coverage. With this option,
+you can overwrite this behavior and include otherwise ignored files in code
+coverage.
+
+For example, if you have tests in source files named with `.t.js` extension as
+following:
+
+```javascript
+// sum.t.js
+
+export function sum(a, b) {
+  return a + b;
+}
+
+if (process.env.NODE_ENV === 'test') {
+  test('sum', () => {
+    expect(sum(1, 2)).toBe(3);
+  });
+}
+```
+
+You can collect coverage from those files with setting `forceCoverageMatch`.
+
+```json
+{
+  ...
+  "jest": {
+    "forceCoverageMatch": ["**/*.t.js"]
   }
 }
 ```
@@ -229,6 +296,20 @@ For example, the following would create a global `__DEV__` variable set to
 Note that, if you specify a global reference value (like an object or array)
 here, and some code mutates that value in the midst of running a test, that
 mutation will _not_ be persisted across test runs for other test files.
+
+### `globalSetup` [string]
+
+Default: `undefined`
+
+This option allows the use of a custom global setup module which exports an
+async function that is triggered once before all test suites.
+
+### `globalTeardown` [string]
+
+Default: `undefined`
+
+This option allows the use of a custom global teardown module which exports an
+async function that is triggered once after all test suites.
 
 ### `mapCoverage` [boolean]
 
@@ -664,7 +745,7 @@ You can create your own module that will be used for setting up the test
 environment. The module must export a class with `setup`, `teardown` and
 `runScript` methods.
 
-##### available in Jest **21.3.0+**
+##### available in Jest **22.0.0+**
 
 _Note: TestEnvironment is sandboxed. Each test suite will trigger setup/teardown
 in their own TestEnvironment._
@@ -672,6 +753,8 @@ in their own TestEnvironment._
 Example:
 
 ```js
+const NodeEnvironment = require('jest-environment-node');
+
 class CustomEnvironment extends NodeEnvironment {
   constructor(config) {
     super(config);
@@ -692,6 +775,17 @@ class CustomEnvironment extends NodeEnvironment {
   }
 }
 ```
+
+### `testEnvironmentOptions` [Object]
+
+##### available in Jest **22.0.0+**
+
+Default: `{}`
+
+Test environment options that will be passed to the `testEnvironment`. The
+relevant options depend on the environment. For example you can override options
+given to [jsdom](https://github.com/tmpvar/jsdom) such as
+`{userAgent: "Agent/007"}`.
 
 ### `testMatch` [array<string>]
 
@@ -721,8 +815,8 @@ be skipped.
 These pattern strings match against the full path. Use the `<rootDir>` string
 token to include the path to your project's root directory to prevent it from
 accidentally ignoring all of your files in different environments that may have
-different root directories. Example: `["<rootDir>/build/",
-"<rootDir>/node_modules/"]`.
+different root directories. Example:
+`["<rootDir>/build/", "<rootDir>/node_modules/"]`.
 
 ### `testRegex` [string]
 
@@ -872,8 +966,17 @@ will not be transformed.
 These pattern strings match against the full path. Use the `<rootDir>` string
 token to include the path to your project's root directory to prevent it from
 accidentally ignoring all of your files in different environments that may have
-different root directories. Example: `["<rootDir>/bower_components/",
-"<rootDir>/node_modules/"]`.
+different root directories.
+
+Example: `["<rootDir>/bower_components/", "<rootDir>/node_modules/"]`.
+
+Sometimes it happens (especially in React Native or TypeScript projects) that
+3rd party modules are published as untranspiled. Since all files inside
+`node_modules` are not transformed by default, Jest will not understand the code
+in these modules, resulting in syntax errors. To overcome this, you may use
+`transformIgnorePatterns` to whitelist such modules. You'll find a good example
+of this use case in
+[React Native Guide](http://facebook.github.io/jest/docs/en/tutorial-react-native.html#transformignorepatterns-customization).
 
 ### `unmockedModulePathPatterns` [array<string>]
 

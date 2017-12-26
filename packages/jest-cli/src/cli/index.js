@@ -33,6 +33,7 @@ import TestWatcher from '../test_watcher';
 import watch from '../watch';
 import yargs from 'yargs';
 import rimraf from 'rimraf';
+import {sync as realpath} from 'realpath-native';
 
 export async function run(maybeArgv?: Argv, project?: Path) {
   try {
@@ -139,6 +140,15 @@ const getProjectListFromCLIArgs = (argv, project: ?Path) => {
 
   if (project) {
     projects.push(project);
+  }
+
+  if (!projects.length && process.platform === 'win32') {
+    try {
+      projects.push(realpath(process.cwd()));
+    } catch (err) {
+      // do nothing, just catch error
+      // process.binding('fs').realpath can throw, e.g. on mapped drives
+    }
   }
 
   if (!projects.length) {
@@ -358,6 +368,7 @@ const runWithoutWatch = async (
     return await runJest({
       changedFilesPromise,
       contexts,
+      failedTestsCache: null,
       globalConfig,
       onComplete,
       outputStream,
